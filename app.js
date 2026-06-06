@@ -11,19 +11,26 @@ const PREFECTURES = [
   '熊本県','大分県','宮崎県','鹿児島県','沖縄県',
 ];
 
+// ── 2026年税制改正対応定数 ──────────────────────
+// 2025年税制改正（2026年1月〜施行）
+const KYUYO_KOJO     = 650000; // 給与所得控除 最低額（65万円）※旧55万
+const KISO_SHOTOKU   = 580000; // 所得税 基礎控除（58万円）※旧48万
+const KISO_JUMINZEI  = 530000; // 住民税 基礎控除（53万円）※旧43万
+
+// 住民税が発生する収入ライン（給与所得控除＋住民税基礎控除）
+const JUMINZEI_LINE  = KYUYO_KOJO + KISO_JUMINZEI;  // = 1,180,000円
+// 所得税が発生する収入ライン（= 旧「103万の壁」→ 2026年から「123万の壁」）
+const SHOTOKUZEI_LINE = KYUYO_KOJO + KISO_SHOTOKU;  // = 1,230,000円
+
 // ── 住民税計算 ──────────────────────────────────
 function calcJuminzei(annualIncome) {
-  const kyuyoShotoku = Math.max(annualIncome - 550000, 0); // 給与所得控除 最低55万
-  const kisoKojo = 430000; // 住民税基礎控除
-  const kazeiShotoku = Math.max(kyuyoShotoku - kisoKojo, 0);
+  const kyuyoShotoku = Math.max(annualIncome - KYUYO_KOJO, 0);
+  const kazeiShotoku = Math.max(kyuyoShotoku - KISO_JUMINZEI, 0);
   if (kazeiShotoku === 0) return 0;
   const shotokuWari = Math.floor(kazeiShotoku * 0.10);
   const kintouWari = 5000;
   return shotokuWari + kintouWari;
 }
-
-// 住民税が発生する収入ライン（課税所得=0になる収入）
-const JUMINZEI_LINE = 550000 + 430000; // = 980000円
 
 // ── LocalStorage ───────────────────────────────
 function loadData() {
@@ -38,8 +45,8 @@ function getSettings() {
   return loadData().settings;
 }
 function getLimitAmount(settings) {
-  if (!settings.limitType) return 1030000;
-  if (settings.limitType === 'custom') return Number(settings.customLimit) || 1030000;
+  if (!settings.limitType) return SHOTOKUZEI_LINE; // デフォルト: 123万（2026年新基準）
+  if (settings.limitType === 'custom') return Number(settings.customLimit) || SHOTOKUZEI_LINE;
   return Number(settings.limitType);
 }
 

@@ -3,7 +3,29 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>あと稼げるくん — 年収上限管理ツール</title>
+  <title>あと稼げるくん — バイト年収管理【123万の壁・2026年最新】</title>
+  <meta name="description" content="給与明細を入力するだけ！バイト・パートの年収上限（123万円の壁）まであと稼げる額を自動計算。住民税の発生ラインも一目でわかる無料ツール。2026年税制改正（123万円の壁）に完全対応。">
+  <meta name="keywords" content="123万の壁,103万の壁,2026,バイト,年収管理,扶養控除,住民税,給与明細,あと稼げる,年収上限,学生バイト">
+  <meta property="og:title" content="あと稼げるくん — バイト年収管理【2026年最新・123万の壁対応】">
+  <meta property="og:description" content="給与明細を入力するだけ！123万円の壁まであと稼げる額を自動計算。住民税の発生ラインもわかる無料ツール。">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://hientubame8-wq.github.io/baito-zankin/">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="あと稼げるくん — バイト年収管理【123万の壁・2026年最新】">
+  <meta name="twitter:description" content="給与明細を入力するだけ！123万円の壁まであと稼げる額を自動計算。住民税の発生ラインもわかる無料ツール。">
+  <link rel="canonical" href="https://hientubame8-wq.github.io/baito-zankin/">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "あと稼げるくん",
+    "description": "バイト・パートの年収上限（123万円の壁）まであと稼げる額を自動計算する無料ツール。2026年税制改正対応。",
+    "url": "https://hientubame8-wq.github.io/baito-zankin/",
+    "applicationCategory": "FinanceApplication",
+    "operatingSystem": "Any",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "JPY" }
+  }
+  </script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <link rel="stylesheet" href="style.css">
@@ -144,7 +166,7 @@
       <label>
         年収上限
         <select id="setting-limit">
-          <option value="1030000">103万円（所得税・扶養の壁）</option>
+          <option value="1230000">123万円（所得税・扶養の壁 🆕 2026年新基準）</option>
           <option value="1060000">106万円（社会保険の壁）</option>
           <option value="1300000">130万円（健康保険の壁）</option>
           <option value="custom">カスタム</option>
@@ -170,12 +192,13 @@
     </form>
 
     <div class="info-box">
-      <h3>住民税の計算方法</h3>
+      <h3>2026年最新の計算方法（税制改正対応）</h3>
       <ul>
-        <li>給与所得 ＝ 総収入 − 給与所得控除（最低55万円）</li>
-        <li>課税所得 ＝ 給与所得 − 基礎控除（43万円）</li>
+        <li>給与所得 ＝ 総収入 − 給与所得控除（<strong>最低65万円</strong> ※旧55万）</li>
+        <li>課税所得 ＝ 給与所得 − 基礎控除（住民税<strong>53万円</strong> ※旧43万）</li>
         <li>住民税 ＝ 課税所得 × 10% ＋ 均等割（約5,000円）</li>
-        <li>非課税ライン：給与収入 <strong>約98万〜100万円</strong>以下</li>
+        <li>住民税 非課税ライン：給与収入 <strong>118万円以下</strong>（※旧98万）</li>
+        <li>所得税・扶養の壁：給与収入 <strong>123万円以下</strong>（※旧103万）</li>
       </ul>
     </div>
 
