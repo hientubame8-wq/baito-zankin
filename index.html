@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>あと稼げるくん — 年収上限管理ツール</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>あと稼げるくん</h1>
+    <p class="subtitle">今年あと<span id="header-remaining">---</span>円稼げます</p>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab active" data-tab="dashboard">ダッシュボード</button>
+    <button class="tab" data-tab="input">明細入力</button>
+    <button class="tab" data-tab="settings">設定</button>
+  </nav>
+
+  <!-- ダッシュボード -->
+  <section id="tab-dashboard" class="tab-content active">
+    <div class="cards">
+      <div class="card highlight">
+        <div class="card-label">あと稼げる額</div>
+        <div class="card-value" id="remaining">¥---</div>
+        <div class="card-sub" id="remaining-months"></div>
+      </div>
+      <div class="card">
+        <div class="card-label">今年の累計収入</div>
+        <div class="card-value" id="cumulative">¥---</div>
+        <div class="card-sub" id="limit-label"></div>
+      </div>
+      <div class="card">
+        <div class="card-label">住民税の発生ライン</div>
+        <div class="card-value" id="juminzei-line">¥1,000,000</div>
+        <div class="card-sub" id="juminzei-status"></div>
+      </div>
+      <div class="card">
+        <div class="card-label">予測：壁を超える月</div>
+        <div class="card-value" id="prediction">---</div>
+        <div class="card-sub" id="prediction-sub"></div>
+      </div>
+    </div>
+
+    <div class="chart-box">
+      <h2>月別収入グラフ</h2>
+      <canvas id="incomeChart"></canvas>
+    </div>
+
+    <div class="progress-box">
+      <div class="progress-header">
+        <span>進捗</span>
+        <span id="progress-label">0%</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill"></div>
+        <div class="progress-marker" id="juminzei-marker" title="住民税発生ライン"></div>
+      </div>
+      <div class="progress-footer">
+        <span>¥0</span>
+        <span id="progress-limit">---</span>
+      </div>
+    </div>
+
+    <div id="no-data-msg" class="empty-state">
+      <p>まず「設定」で上限と居住地を登録し、<br>「明細入力」から給与を入力してください。</p>
+    </div>
+  </section>
+
+  <!-- 明細入力 -->
+  <section id="tab-input" class="tab-content">
+
+    <!-- OCRセクション -->
+    <div class="ocr-box">
+      <h2>スクショから読み取る</h2>
+      <div class="ocr-dropzone" id="ocr-dropzone">
+        <input type="file" id="ocr-file" accept="image/*" style="display:none">
+        <div class="ocr-drop-inner" id="ocr-drop-inner">
+          <div class="ocr-icon">📷</div>
+          <p>タップして画像を選択<br><small>または画像をここにドロップ</small></p>
+        </div>
+        <img id="ocr-preview" style="display:none">
+      </div>
+      <div id="ocr-status" class="ocr-status" style="display:none">
+        <div class="ocr-spinner"></div>
+        <span id="ocr-status-text">読み取り中...</span>
+      </div>
+      <div id="ocr-result" class="ocr-result" style="display:none">
+        <p class="ocr-result-title">読み取り結果</p>
+        <div class="ocr-fields">
+          <label>総支給額
+            <div class="input-row">
+              <input type="number" id="ocr-gross" min="0">
+              <span>円</span>
+            </div>
+          </label>
+          <label>交通費
+            <div class="input-row">
+              <input type="number" id="ocr-transport" min="0">
+              <span>円</span>
+            </div>
+          </label>
+        </div>
+        <button type="button" id="ocr-apply" class="btn-primary">フォームに反映する</button>
+        <button type="button" id="ocr-retry" class="btn-secondary" style="margin-top:.5rem">やり直す</button>
+      </div>
+    </div>
+
+    <h2>手動入力</h2>
+    <form id="input-form">
+      <label>
+        対象月
+        <input type="month" id="input-month" required>
+      </label>
+      <label>
+        総支給額（交通費含まず）
+        <div class="input-row">
+          <input type="number" id="input-gross" placeholder="例: 85000" min="0" required>
+          <span>円</span>
+        </div>
+      </label>
+      <label>
+        交通費（非課税）
+        <div class="input-row">
+          <input type="number" id="input-transport" placeholder="例: 5000" min="0" value="0">
+          <span>円</span>
+        </div>
+        <small>月15万円まで非課税（収入カウント外）</small>
+      </label>
+      <button type="submit" class="btn-primary">登録する</button>
+    </form>
+
+    <h2 style="margin-top:2rem">入力履歴</h2>
+    <div id="history-list" class="history-list"></div>
+  </section>
+
+  <!-- 設定 -->
+  <section id="tab-settings" class="tab-content">
+    <h2>基本設定</h2>
+    <form id="settings-form">
+      <label>
+        年収上限
+        <select id="setting-limit">
+          <option value="1030000">103万円（所得税・扶養の壁）</option>
+          <option value="1060000">106万円（社会保険の壁）</option>
+          <option value="1300000">130万円（健康保険の壁）</option>
+          <option value="custom">カスタム</option>
+        </select>
+      </label>
+      <label id="custom-limit-row" style="display:none">
+        カスタム上限額
+        <div class="input-row">
+          <input type="number" id="setting-custom-limit" placeholder="例: 1500000" min="0">
+          <span>円</span>
+        </div>
+      </label>
+      <label>
+        居住都道府県
+        <select id="setting-prefecture"></select>
+      </label>
+      <label>
+        市区町村（任意）
+        <input type="text" id="setting-city" placeholder="例: 新宿区">
+        <small>住民税の均等割は市区町村によりわずかに異なります</small>
+      </label>
+      <button type="submit" class="btn-primary">保存する</button>
+    </form>
+
+    <div class="info-box">
+      <h3>住民税の計算方法</h3>
+      <ul>
+        <li>給与所得 ＝ 総収入 − 給与所得控除（最低55万円）</li>
+        <li>課税所得 ＝ 給与所得 − 基礎控除（43万円）</li>
+        <li>住民税 ＝ 課税所得 × 10% ＋ 均等割（約5,000円）</li>
+        <li>非課税ライン：給与収入 <strong>約98万〜100万円</strong>以下</li>
+      </ul>
+    </div>
+
+    <div class="danger-zone">
+      <h3>データ管理</h3>
+      <button id="btn-export" class="btn-secondary">データをエクスポート（JSON）</button>
+      <button id="btn-reset" class="btn-danger">全データをリセット</button>
+    </div>
+  </section>
+
+  <script src="app.js"></script>
+</body>
+</html>
