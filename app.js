@@ -11,6 +11,27 @@ const PREFECTURES = [
   '熊本県','大分県','宮崎県','鹿児島県','沖縄県',
 ];
 
+// ── 都道府県別 均等割（円/年）2026年 ──────────────
+// 標準6,000円（都道府県2,000 + 市区町村3,000 + 森林環境税1,000）
+// ※独自環境税・超過課税がある都道府県は加算
+const PREF_KINTOU_WARI = {
+  '北海道': 6000, '青森県': 6200, '岩手県': 6500, '宮城県': 6300,
+  '秋田県': 6500, '山形県': 6300, '福島県': 6200, '茨城県': 6000,
+  '栃木県': 6000, '群馬県': 6000, '埼玉県': 6000, '千葉県': 6000,
+  '東京都': 6000, '神奈川県': 6000, '新潟県': 6000, '富山県': 6000,
+  '石川県': 6000, '福井県': 6000, '山梨県': 6300, '長野県': 6300,
+  '岐阜県': 6000, '静岡県': 6000, '愛知県': 6000, '三重県': 6300,
+  '滋賀県': 6000, '京都府': 6000, '大阪府': 6000, '兵庫県': 6000,
+  '奈良県': 6000, '和歌山県': 6200, '鳥取県': 6000, '島根県': 6500,
+  '岡山県': 6000, '広島県': 6000, '山口県': 6000, '徳島県': 6200,
+  '香川県': 6000, '愛媛県': 6200, '高知県': 6500, '福岡県': 6000,
+  '佐賀県': 6000, '長崎県': 6200, '熊本県': 6000, '大分県': 6200,
+  '宮崎県': 6300, '鹿児島県': 6000, '沖縄県': 6000,
+};
+function getKintouWari(prefecture) {
+  return PREF_KINTOU_WARI[prefecture] ?? 6000;
+}
+
 // ── 2026年税制改正対応定数 ──────────────────────
 // 2025年税制改正（2026年1月〜施行）
 const KYUYO_KOJO     = 650000; // 給与所得控除 最低額（65万円）※旧55万
@@ -23,12 +44,13 @@ const JUMINZEI_LINE  = KYUYO_KOJO + KISO_JUMINZEI;  // = 1,180,000円
 const SHOTOKUZEI_LINE = KYUYO_KOJO + KISO_SHOTOKU;  // = 1,230,000円
 
 // ── 住民税計算 ──────────────────────────────────
-function calcJuminzei(annualIncome) {
+// prefecture を渡すと地域別均等割を使用（省略時は全国標準6,000円）
+function calcJuminzei(annualIncome, prefecture = null) {
   const kyuyoShotoku = Math.max(annualIncome - KYUYO_KOJO, 0);
   const kazeiShotoku = Math.max(kyuyoShotoku - KISO_JUMINZEI, 0);
   if (kazeiShotoku === 0) return 0;
   const shotokuWari = Math.floor(kazeiShotoku * 0.10);
-  const kintouWari = 5000;
+  const kintouWari = getKintouWari(prefecture);
   return shotokuWari + kintouWari;
 }
 
@@ -153,12 +175,25 @@ function updateDashboard() {
   document.getElementById('remaining-months').textContent =
     remaining > 0 ? `残り${remainingMonths}ヶ月` : '今年の上限到達';
 
-  // 住民税
+  // 住民税（地域別）
+  const pref = settings.prefecture || null;
+  const kintouWari = getKintouWari(pref);
+  const estimatedJuminzei = calcJuminzei(cumulative, pref);
   document.getElementById('juminzei-line').textContent = fmt(JUMINZEI_LINE);
   const juminzeiStatus = cumulative >= JUMINZEI_LINE
-    ? `発生中（推定 ${fmt(calcJuminzei(cumulative))} ）`
+    ? `発生中（推定 ${fmt(estimatedJuminzei)} ）`
     : `あと ${fmt(JUMINZEI_LINE - cumulative)} で発生`;
   document.getElementById('juminzei-status').textContent = juminzeiStatus;
+
+  // 推定住民税カード
+  const juminzeiCard = document.getElementById('estimated-juminzei');
+  const juminzeiCardSub = document.getElementById('estimated-juminzei-sub');
+  if (juminzeiCard) {
+    juminzeiCard.textContent = cumulative >= JUMINZEI_LINE ? fmt(estimatedJuminzei) : '¥0';
+    juminzeiCardSub.textContent = pref
+      ? `${pref}（均等割 ${kintouWari.toLocaleString()}円）`
+      : '地域を設定すると精度UP';
+  }
 
   // 予測
   const pred = predictOverMonth(limit);

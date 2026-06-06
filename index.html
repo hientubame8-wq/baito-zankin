@@ -65,6 +65,11 @@
         <div class="card-value" id="prediction">---</div>
         <div class="card-sub" id="prediction-sub"></div>
       </div>
+      <div class="card" style="grid-column: 1 / -1">
+        <div class="card-label">推定 住民税（今年分）</div>
+        <div class="card-value" id="estimated-juminzei">¥0</div>
+        <div class="card-sub" id="estimated-juminzei-sub">地域を設定すると精度UP</div>
+      </div>
     </div>
 
     <div class="chart-box">
@@ -186,7 +191,7 @@
       <label>
         市区町村（任意）
         <input type="text" id="setting-city" placeholder="例: 新宿区">
-        <small>住民税の均等割は市区町村によりわずかに異なります</small>
+        <small>都道府県を選ぶと住民税の均等割が地域別に反映されます</small>
       </label>
       <button type="submit" class="btn-primary">保存する</button>
     </form>
