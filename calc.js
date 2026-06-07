@@ -37,26 +37,41 @@ function getKintouWari(prefecture) {
   return PREF_KINTOU_WARI[prefecture] ?? 6000;
 }
 
-// ── 2026年税制改正対応定数 ──────────────────────
-// 2025年税制改正（2026年1月〜施行）
-const KYUYO_KOJO     = 650000; // 給与所得控除 最低額（65万円）※旧55万
-const KISO_SHOTOKU   = 580000; // 所得税 基礎控除（58万円）※旧48万
-const KISO_JUMINZEI  = 530000; // 住民税 基礎控除（53万円）※旧43万
+// ── 2026年税制改正対応定数（令和7年度税制改正・2025年分以降） ──
+const KYUYO_KOJO   = 650000; // 給与所得控除 最低額（65万円）※旧55万
+const KISO_JUMINZEI = 530000; // 住民税 基礎控除（53万円）※旧43万
+// 住民税の均等割が非課税となる合計所得金額の限度（1級地・単身の目安。自治体差あり）
+const KINTOU_HIKAZEI_GOUKEI = 450000; // 合計所得45万 → 給与収入110万
 
-// 住民税が発生する収入ライン（給与所得控除＋住民税基礎控除）
-const JUMINZEI_LINE  = KYUYO_KOJO + KISO_JUMINZEI;  // = 1,180,000円
-// 所得税が発生する収入ライン（= 旧「103万の壁」→ 2026年から「123万の壁」）
-const SHOTOKUZEI_LINE = KYUYO_KOJO + KISO_SHOTOKU;  // = 1,230,000円
+// ── 主要な「年収の壁」（給与収入ベース・2026年） ──────────
+// 住民税が発生し始めるライン（均等割。自治体により100〜110万、目安110万）
+const JUMINZEI_LINE = KYUYO_KOJO + KINTOU_HIKAZEI_GOUKEI; // = 1,100,000円
+// 住民税の所得割が発生するライン（給与所得控除＋住民税基礎控除）
+const SHOTOKUWARI_LINE = KYUYO_KOJO + KISO_JUMINZEI;      // = 1,180,000円
+// 親の扶養控除の判定基準（合計所得58万 = 給与123万）
+const FUYO_LINE = 1230000;
+// 社会保険の扶養を外れるライン（手取りへの影響が最も大きい）
+const SHAHO_LINE = 1300000;
+// 親の特定扶養控除が満額維持／勤労学生控除の上限（合計所得85万）
+const TOKUTEI_FUYO_LINE = 1500000;
+// 本人に所得税がかかり始めるライン（給与所得控除65万＋基礎控除95万）
+const SHOTOKUZEI_LINE = 1600000;
+
+// 標準の上限（社会保険の壁＝学生バイトに最も影響が大きい）
+const DEFAULT_LIMIT = SHAHO_LINE;
 
 // ── 住民税計算 ──────────────────────────────────
-// prefecture を渡すと地域別均等割を使用（省略時は全国標準6,000円）
+// 住民税 = 均等割（定額・地域差あり）＋ 所得割（課税所得×10%）
+// ・給与収入が約110万円以下：均等割・所得割とも非課税（合計所得≦45万）
+// ・110万〜118万円：均等割（約6,000円）のみ
+// ・118万円超：均等割 ＋ 所得割
 function calcJuminzei(annualIncome, prefecture = null) {
-  const kyuyoShotoku = Math.max(annualIncome - KYUYO_KOJO, 0);
-  const kazeiShotoku = Math.max(kyuyoShotoku - KISO_JUMINZEI, 0);
-  if (kazeiShotoku === 0) return 0;
-  const shotokuWari = Math.floor(kazeiShotoku * 0.10);
-  const kintouWari = getKintouWari(prefecture);
-  return shotokuWari + kintouWari;
+  const goukeiShotoku = Math.max(annualIncome - KYUYO_KOJO, 0); // 合計所得金額
+  if (goukeiShotoku <= KINTOU_HIKAZEI_GOUKEI) return 0;         // 非課税限度額以下
+  const kintouWari = getKintouWari(prefecture);                 // 均等割（地域別）
+  const kazeiShotoku = Math.max(goukeiShotoku - KISO_JUMINZEI, 0);
+  const shotokuWari = Math.floor(kazeiShotoku * 0.10);          // 所得割
+  return kintouWari + shotokuWari;
 }
 
 // ── 定数（検証用） ──────────────────────────────

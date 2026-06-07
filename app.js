@@ -49,8 +49,8 @@ function getSettings() {
   return loadData().settings;
 }
 function getLimitAmount(settings) {
-  if (!settings.limitType) return SHOTOKUZEI_LINE; // デフォルト: 123万（2026年新基準）
-  if (settings.limitType === 'custom') return Number(settings.customLimit) || SHOTOKUZEI_LINE;
+  if (!settings.limitType) return DEFAULT_LIMIT; // デフォルト: 130万（社会保険の壁）
+  if (settings.limitType === 'custom') return Number(settings.customLimit) || DEFAULT_LIMIT;
   return Number(settings.limitType);
 }
 
@@ -162,16 +162,16 @@ function updateDashboard() {
   const kintouWari = getKintouWari(pref);
   const estimatedJuminzei = calcJuminzei(cumulative, pref);
   document.getElementById('juminzei-line').textContent = fmt(JUMINZEI_LINE);
-  const juminzeiStatus = cumulative >= JUMINZEI_LINE
+  const juminzeiStatus = estimatedJuminzei > 0
     ? `発生中（推定 ${fmt(estimatedJuminzei)} ）`
-    : `あと ${fmt(JUMINZEI_LINE - cumulative)} で発生`;
+    : `あと ${fmt(Math.max(JUMINZEI_LINE - cumulative, 0))} で発生`;
   document.getElementById('juminzei-status').textContent = juminzeiStatus;
 
   // 推定住民税カード
   const juminzeiCard = document.getElementById('estimated-juminzei');
   const juminzeiCardSub = document.getElementById('estimated-juminzei-sub');
   if (juminzeiCard) {
-    juminzeiCard.textContent = cumulative >= JUMINZEI_LINE ? fmt(estimatedJuminzei) : '¥0';
+    juminzeiCard.textContent = fmt(estimatedJuminzei);
     juminzeiCardSub.textContent = pref
       ? `${pref}（均等割 ${kintouWari.toLocaleString()}円）`
       : '地域を設定すると精度UP';
