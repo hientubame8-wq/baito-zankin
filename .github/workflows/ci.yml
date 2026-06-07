@@ -1,0 +1,21 @@
+name: テスト
+
+# push時・PR時・毎週月曜の定期実行で、計算ロジックを自動検証
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+  schedule:
+    - cron: '0 23 * * 0'   # 毎週月曜 08:00 JST（日曜23:00 UTC）
+  workflow_dispatch:       # 手動実行も可能
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: 住民税・データ検証テスト
+        run: node test/calc.test.js

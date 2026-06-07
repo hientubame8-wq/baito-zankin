@@ -1,0 +1,14 @@
+{
+  "name": "baito-zankin",
+  "version": "1.0.0",
+  "description": "学生バイトの年収管理ツール「あと稼げるくん」",
+  "private": true,
+  "scripts": {
+    "test": "node test/calc.test.js",
+    "healthcheck": "node test/healthcheck.js",
+    "healthcheck:live": "node test/healthcheck.js --live",
+    "check": "node test/calc.test.js && node test/healthcheck.js",
+    "serve": "npx serve . -p 3456"
+  },
+  "license": "MIT"
+}

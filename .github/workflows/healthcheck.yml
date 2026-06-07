@@ -1,0 +1,18 @@
+name: 死活・リンク監視
+
+# 毎週、公開サイトの稼働とリンク切れをチェック。失敗するとオーナーにメール通知。
+on:
+  schedule:
+    - cron: '30 23 * * 1'   # 毎週火曜 08:30 JST（月曜23:30 UTC）
+  workflow_dispatch:
+
+jobs:
+  healthcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: 内部リンク・sitemap・公開サイトの死活チェック
+        run: node test/healthcheck.js --live

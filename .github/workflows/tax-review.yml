@@ -1,0 +1,31 @@
+name: 税制レビューのリマインド
+
+# 税制改正は毎年12月に大綱が公表され、翌年から施行される。
+# 12月と翌1月に「税額の見直しチェックリスト」Issueを自動発行する。
+on:
+  schedule:
+    - cron: '0 0 15 12 *'   # 毎年12月15日（税制改正大綱の時期）
+    - cron: '0 0 6 1 *'     # 毎年1月6日（新年度の確認）
+  workflow_dispatch:
+
+jobs:
+  remind:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: 税制レビューIssueを作成
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          YEAR=$(date +%Y)
+          gh issue create \
+            --repo "${{ github.repository }}" \
+            --title "【要対応】${YEAR}年 税制レビュー：年収の壁・住民税の数値を確認" \
+            --body-file .github/tax-review-checklist.md \
+            --label "tax-review" || \
+          gh issue create \
+            --repo "${{ github.repository }}" \
+            --title "【要対応】${YEAR}年 税制レビュー：年収の壁・住民税の数値を確認" \
+            --body-file .github/tax-review-checklist.md

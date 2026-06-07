@@ -133,3 +133,16 @@ function sanitizeData(raw) {
   }
   return safe;
 }
+
+// ── Node.js / CI からも使えるようにエクスポート ──────────
+// ブラウザでは module が未定義なのでこのブロックは無視される。
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    PREFECTURES, PREF_KINTOU_WARI, getKintouWari, KINTOU_WARI_BASE,
+    KYUYO_KOJO, KISO_JUMINZEI, KINTOU_HIKAZEI_GOUKEI, JINTEKI_KOJO_SA,
+    JUMINZEI_LINE, SHOTOKUWARI_LINE, FUYO_LINE, SHAHO_LINE,
+    TOKUTEI_FUYO_LINE, SHOTOKUZEI_LINE, DEFAULT_LIMIT,
+    calcJuminzei, sanitizeAmount, sanitizeData,
+    STORAGE_KEY, MAX_AMOUNT, EMPTY_DATA,
+  };
+}
