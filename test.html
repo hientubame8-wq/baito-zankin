@@ -60,27 +60,29 @@
     assert('特定扶養/勤労学生の壁 = 150万', TOKUTEI_FUYO_LINE, 1500000);
     assert('本人所得税の壁 = 160万', SHOTOKUZEI_LINE, 1600000);
 
-    // ── 住民税計算 ──
+    // ── 住民税計算 ──（均等割の標準額は5,000円：森林環境税1,000円込み）
     group('住民税計算 calcJuminzei()');
     assert('109万は全額非課税（0円）', calcJuminzei(1090000, '東京都'), 0);
     assert('110万ちょうども非課税', calcJuminzei(1100000, '東京都'), 0);
     // 110万〜118万は均等割のみ（合計所得45万超〜53万、所得割の課税所得は0）
-    assert('115万は均等割のみ6000円', calcJuminzei(1150000, '東京都'), 6000);
-    assert('118万も均等割のみ6000円', calcJuminzei(1180000, '東京都'), 6000);
-    // 119万: 合計所得54万 → 所得割(54-53)万×10%=1000 + 均等割6000 = 7000
-    assert('119万で住民税7000円', calcJuminzei(1190000, '東京都'), 7000);
-    assert('150万・東京（均等割6000）', calcJuminzei(1500000, '東京都'), 32000 + 6000);
-    assert('150万・高知（均等割6500）', calcJuminzei(1500000, '高知県'), 32000 + 6500);
+    assert('115万は均等割のみ5000円', calcJuminzei(1150000, '東京都'), 5000);
+    assert('118万も均等割のみ5000円', calcJuminzei(1180000, '東京都'), 5000);
+    // 119万: 合計所得54万 → 所得割(54-53)万×10%=1000 + 均等割5000 = 6000
+    assert('119万で住民税6000円', calcJuminzei(1190000, '東京都'), 6000);
+    assert('150万・東京（均等割5000）', calcJuminzei(1500000, '東京都'), 32000 + 5000);
+    assert('150万・高知（均等割5500）', calcJuminzei(1500000, '高知県'), 32000 + 5500);
     assert('地域差は均等割の差500円', calcJuminzei(1500000, '高知県') - calcJuminzei(1500000, '東京都'), 500);
-    assert('都道府県未指定は標準6000', calcJuminzei(1500000), 32000 + 6000);
-    assert('不明な都道府県も標準6000', calcJuminzei(1500000, '海外'), 32000 + 6000);
+    assert('都道府県未指定は標準5000', calcJuminzei(1500000), 32000 + 5000);
+    assert('不明な都道府県も標準5000', calcJuminzei(1500000, '海外'), 32000 + 5000);
 
-    // ── 均等割テーブル ──
+    // ── 均等割テーブル（標準5000円＋県の超過課税） ──
     group('均等割 getKintouWari()');
-    assert('東京都 = 6000', getKintouWari('東京都'), 6000);
-    assert('岩手県 = 6500', getKintouWari('岩手県'), 6500);
-    assert('長野県 = 6300', getKintouWari('長野県'), 6300);
-    assert('null → 6000', getKintouWari(null), 6000);
+    assert('東京都 = 5000（超過課税なし）', getKintouWari('東京都'), 5000);
+    assert('宮城県 = 6200（最高・+1200）', getKintouWari('宮城県'), 6200);
+    assert('岩手県 = 6000（+1000）', getKintouWari('岩手県'), 6000);
+    assert('神奈川県 = 5300（+300）', getKintouWari('神奈川県'), 5300);
+    assert('長野県 = 5500（+500）', getKintouWari('長野県'), 5500);
+    assert('null → 標準5000', getKintouWari(null), 5000);
 
     // ── 金額サニタイズ ──
     group('金額サニタイズ sanitizeAmount()');
