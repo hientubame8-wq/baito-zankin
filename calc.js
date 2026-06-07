@@ -64,17 +64,25 @@ const SHOTOKUZEI_LINE = 1600000;
 // 標準の上限（社会保険の壁＝学生バイトに最も影響が大きい）
 const DEFAULT_LIMIT = SHAHO_LINE;
 
+// 調整控除：所得税と住民税の人的控除の差による負担増を調整する税額控除。
+// 課税所得200万円以下は「人的控除差の合計 と 課税所得 の小さい方 × 5%」。
+// 単身・給与所得のみ（基礎控除のみ）を想定し、人的控除差＝5万円で概算。
+const JINTEKI_KOJO_SA = 50000; // 基礎控除の人的控除差（所得税58万−住民税53万）
+
 // ── 住民税計算 ──────────────────────────────────
-// 住民税 = 均等割（定額・地域差あり）＋ 所得割（課税所得×10%）
+// 住民税 = 均等割（定額・地域差あり）＋ 所得割（課税所得×10% − 調整控除）
 // ・給与収入が約110万円以下：均等割・所得割とも非課税（合計所得≦45万）
-// ・110万〜118万円：均等割（約6,000円）のみ
-// ・118万円超：均等割 ＋ 所得割
+// ・約110万〜118万円：均等割（標準5,000円）のみ
+// ・118万円超：均等割 ＋ 所得割（調整控除 最大2,500円を差し引く）
 function calcJuminzei(annualIncome, prefecture = null) {
   const goukeiShotoku = Math.max(annualIncome - KYUYO_KOJO, 0); // 合計所得金額
   if (goukeiShotoku <= KINTOU_HIKAZEI_GOUKEI) return 0;         // 非課税限度額以下
   const kintouWari = getKintouWari(prefecture);                 // 均等割（地域別）
   const kazeiShotoku = Math.max(goukeiShotoku - KISO_JUMINZEI, 0);
-  const shotokuWari = Math.floor(kazeiShotoku * 0.10);          // 所得割
+  if (kazeiShotoku === 0) return kintouWari;                    // 所得割なし（均等割のみ）
+  // 所得割 ＝ 課税所得×10% − 調整控除（課税所得200万以下）
+  const choseiKojo = Math.floor(Math.min(JINTEKI_KOJO_SA, kazeiShotoku) * 0.05);
+  const shotokuWari = Math.max(Math.floor(kazeiShotoku * 0.10) - choseiKojo, 0);
   return kintouWari + shotokuWari;
 }
 

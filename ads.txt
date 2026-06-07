@@ -1,0 +1,4 @@
+# Google AdSense の審査に通ったら、下の XXXXXXXXXXXXXXXX を
+# あなたの発行者ID（ca-pub- の後ろの数字16桁）に置き換えてコミットしてください。
+# 例) google.com, pub-1234567890123456, DIRECT, f08c47fec0942fa0
+google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0
