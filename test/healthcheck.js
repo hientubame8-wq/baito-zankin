@@ -25,8 +25,10 @@ for (const file of htmlFiles) {
     const ref = m[1];
     // 外部URL・アンカー・mailto・data はスキップ
     if (/^(https?:|mailto:|#|data:|\/\/)/.test(ref)) continue;
-    const cleaned = ref.split('#')[0].split('?')[0];
+    let cleaned = ref.split('#')[0].split('?')[0];
     if (!cleaned) continue;
+    // GitHub Pagesのベースパス /baito-zankin/ をローカルのルートに対応付け
+    cleaned = cleaned.replace(/^\/baito-zankin\//, '').replace(/^\//, '');
     const target = path.join(ROOT, cleaned);
     if (!fs.existsSync(target)) {
       errors.push(`[リンク切れ] ${file} → ${ref}`);

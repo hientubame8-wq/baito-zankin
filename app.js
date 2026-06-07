@@ -316,6 +316,23 @@ function parseOcrText(text) {
   return { gross: gross || 0, transport: transport || 0 };
 }
 
+// Tesseract.js（OCR・重い）を使う時だけ遅延読み込み（初回表示の高速化＝SEO）
+let _tesseractLoading = null;
+function loadTesseract() {
+  if (typeof Tesseract !== 'undefined') return Promise.resolve();
+  if (_tesseractLoading) return _tesseractLoading;
+  _tesseractLoading = new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
+    s.integrity = 'sha384-GJqSu7vueQ9qN0E9yLPb3Wtpd7OrgK8KmYzC8T1IysG1bcvxvIO4qtYR/D3A991F';
+    s.crossOrigin = 'anonymous';
+    s.onload = () => resolve();
+    s.onerror = () => reject(new Error('OCRライブラリの読み込みに失敗しました'));
+    document.head.appendChild(s);
+  });
+  return _tesseractLoading;
+}
+
 function initOcr() {
   const dropzone = document.getElementById('ocr-dropzone');
   const fileInput = document.getElementById('ocr-file');
@@ -336,9 +353,11 @@ function initOcr() {
     dropInner.style.display = 'none';
     preview.src = imageSource;
     preview.style.display = 'block';
-    showStatus('日本語モデルを読み込み中...');
+    showStatus('OCRエンジンを準備中...');
 
     try {
+      await loadTesseract(); // 初回のみCDNから読み込み
+      showStatus('日本語モデルを読み込み中...');
       const worker = await Tesseract.createWorker('jpn', 1, {
         logger: m => {
           if (m.status === 'recognizing text') {

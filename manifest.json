@@ -1,0 +1,12 @@
+{
+  "name": "あと稼げるくん — 年収の壁・住民税の計算",
+  "short_name": "あと稼げるくん",
+  "description": "学生バイトの「あと稼げる額」を自動計算。2026年の年収の壁・住民税に対応した無料ツール。",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "lang": "ja",
+  "categories": ["finance", "productivity", "utilities"]
+}
