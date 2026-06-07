@@ -322,3 +322,79 @@ small { font-size: .7rem; color: var(--gray-400); font-weight: 400; }
   white-space: nowrap;
 }
 .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+/* Footer */
+.site-footer {
+  padding: 1.5rem 1rem 2.5rem;
+  margin-top: 1rem;
+  border-top: 1px solid var(--gray-200);
+  text-align: center;
+}
+.footer-disclaimer {
+  font-size: .7rem;
+  color: var(--gray-400);
+  line-height: 1.6;
+  margin-bottom: .75rem;
+}
+.footer-links { display: flex; justify-content: center; align-items: center; gap: .25rem; }
+.footer-link {
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-size: .75rem;
+  cursor: pointer;
+  padding: .25rem;
+  text-decoration: underline;
+}
+.footer-sep { color: var(--gray-400); font-size: .75rem; }
+.footer-copy { font-size: .7rem; color: var(--gray-400); margin-top: .5rem; }
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.5);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 200;
+  padding: 0;
+}
+.modal-overlay[hidden] { display: none; }
+.modal {
+  background: #fff;
+  width: 100%;
+  max-width: 480px;
+  max-height: 85vh;
+  border-radius: 16px 16px 0 0;
+  display: flex;
+  flex-direction: column;
+  animation: slideUp .25s ease;
+}
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  border-bottom: 1px solid var(--gray-200);
+  position: sticky;
+  top: 0;
+  background: #fff;
+  border-radius: 16px 16px 0 0;
+}
+.modal-head h2 { font-size: 1.05rem; }
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  color: var(--gray-400);
+  cursor: pointer;
+  padding: .25rem .5rem;
+}
+.modal-body { padding: 1rem 1.25rem 2rem; overflow-y: auto; }
+.modal-body h3 { font-size: .9rem; margin: 1rem 0 .35rem; color: var(--gray-900); }
+.modal-body h3:first-child { margin-top: 0; }
+.modal-body p { font-size: .825rem; color: var(--gray-600); line-height: 1.7; margin-bottom: .5rem; }
+.modal-body ul { padding-left: 1.25rem; margin-top: .5rem; }
+.modal-body li { font-size: .825rem; color: var(--gray-600); line-height: 1.7; margin-bottom: .5rem; }

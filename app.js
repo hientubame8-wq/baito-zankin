@@ -1,65 +1,47 @@
 'use strict';
 
-// ── 都道府県リスト ──────────────────────────────
-const PREFECTURES = [
-  '北海道','青森県','岩手県','宮城県','秋田県','山形県','福島県',
-  '茨城県','栃木県','群馬県','埼玉県','千葉県','東京都','神奈川県',
-  '新潟県','富山県','石川県','福井県','山梨県','長野県','岐阜県',
-  '静岡県','愛知県','三重県','滋賀県','京都府','大阪府','兵庫県',
-  '奈良県','和歌山県','鳥取県','島根県','岡山県','広島県','山口県',
-  '徳島県','香川県','愛媛県','高知県','福岡県','佐賀県','長崎県',
-  '熊本県','大分県','宮崎県','鹿児島県','沖縄県',
-];
+// ============================================================
+// app.js — UI・DOM・ストレージ I/O
+// 税計算とデータ検証の純粋ロジックは calc.js に分離（先に読み込む）
+// ============================================================
 
-// ── 都道府県別 均等割（円/年）2026年 ──────────────
-// 標準6,000円（都道府県2,000 + 市区町村3,000 + 森林環境税1,000）
-// ※独自環境税・超過課税がある都道府県は加算
-const PREF_KINTOU_WARI = {
-  '北海道': 6000, '青森県': 6200, '岩手県': 6500, '宮城県': 6300,
-  '秋田県': 6500, '山形県': 6300, '福島県': 6200, '茨城県': 6000,
-  '栃木県': 6000, '群馬県': 6000, '埼玉県': 6000, '千葉県': 6000,
-  '東京都': 6000, '神奈川県': 6000, '新潟県': 6000, '富山県': 6000,
-  '石川県': 6000, '福井県': 6000, '山梨県': 6300, '長野県': 6300,
-  '岐阜県': 6000, '静岡県': 6000, '愛知県': 6000, '三重県': 6300,
-  '滋賀県': 6000, '京都府': 6000, '大阪府': 6000, '兵庫県': 6000,
-  '奈良県': 6000, '和歌山県': 6200, '鳥取県': 6000, '島根県': 6500,
-  '岡山県': 6000, '広島県': 6000, '山口県': 6000, '徳島県': 6200,
-  '香川県': 6000, '愛媛県': 6200, '高知県': 6500, '福岡県': 6000,
-  '佐賀県': 6000, '長崎県': 6200, '熊本県': 6000, '大分県': 6200,
-  '宮崎県': 6300, '鹿児島県': 6000, '沖縄県': 6000,
-};
-function getKintouWari(prefecture) {
-  return PREF_KINTOU_WARI[prefecture] ?? 6000;
+// ── LocalStorage（堅牢化版） ─────────────────────
+// ストレージが使えるか事前判定（プライベートブラウズ・無効化対策）
+function isStorageAvailable() {
+  try {
+    const t = '__test__';
+    localStorage.setItem(t, t);
+    localStorage.removeItem(t);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
-// ── 2026年税制改正対応定数 ──────────────────────
-// 2025年税制改正（2026年1月〜施行）
-const KYUYO_KOJO     = 650000; // 給与所得控除 最低額（65万円）※旧55万
-const KISO_SHOTOKU   = 580000; // 所得税 基礎控除（58万円）※旧48万
-const KISO_JUMINZEI  = 530000; // 住民税 基礎控除（53万円）※旧43万
-
-// 住民税が発生する収入ライン（給与所得控除＋住民税基礎控除）
-const JUMINZEI_LINE  = KYUYO_KOJO + KISO_JUMINZEI;  // = 1,180,000円
-// 所得税が発生する収入ライン（= 旧「103万の壁」→ 2026年から「123万の壁」）
-const SHOTOKUZEI_LINE = KYUYO_KOJO + KISO_SHOTOKU;  // = 1,230,000円
-
-// ── 住民税計算 ──────────────────────────────────
-// prefecture を渡すと地域別均等割を使用（省略時は全国標準6,000円）
-function calcJuminzei(annualIncome, prefecture = null) {
-  const kyuyoShotoku = Math.max(annualIncome - KYUYO_KOJO, 0);
-  const kazeiShotoku = Math.max(kyuyoShotoku - KISO_JUMINZEI, 0);
-  if (kazeiShotoku === 0) return 0;
-  const shotokuWari = Math.floor(kazeiShotoku * 0.10);
-  const kintouWari = getKintouWari(prefecture);
-  return shotokuWari + kintouWari;
-}
-
-// ── LocalStorage ───────────────────────────────
 function loadData() {
-  return JSON.parse(localStorage.getItem('baito_data') || '{"records":[],"settings":{}}');
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return structuredClone(EMPTY_DATA);
+    return sanitizeData(JSON.parse(raw)); // 破損JSONはcatchで復旧
+  } catch (e) {
+    console.warn('保存データの読み込みに失敗しました。初期化します。', e);
+    return structuredClone(EMPTY_DATA);
+  }
 }
+
 function saveData(data) {
-  localStorage.setItem('baito_data', JSON.stringify(data));
+  try {
+    const safe = sanitizeData(data);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(safe));
+    return true;
+  } catch (e) {
+    // 容量超過・ストレージ無効など
+    console.error('保存に失敗しました。', e);
+    if (typeof toast === 'function') {
+      toast('保存に失敗しました。ブラウザの設定をご確認ください');
+    }
+    return false;
+  }
 }
 
 // ── 設定 ───────────────────────────────────────
@@ -460,21 +442,33 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('input-form').addEventListener('submit', e => {
     e.preventDefault();
     const month = document.getElementById('input-month').value;
-    const gross = Number(document.getElementById('input-gross').value);
-    const transport = Number(document.getElementById('input-transport').value) || 0;
+    const grossRaw = document.getElementById('input-gross').value;
+    const transport = sanitizeAmount(document.getElementById('input-transport').value);
+
+    // バリデーション
+    if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) {
+      toast('対象月を正しく入力してください');
+      return;
+    }
+    if (grossRaw === '' || Number(grossRaw) < 0 || !Number.isFinite(Number(grossRaw))) {
+      toast('総支給額を正しく入力してください');
+      return;
+    }
+    const gross = sanitizeAmount(grossRaw);
 
     const data = loadData();
     // 同月は上書き
+    const existed = data.records.some(r => r.month === month);
     data.records = data.records.filter(r => r.month !== month);
     data.records.push({ month, gross, transport });
-    saveData(data);
+    if (!saveData(data)) return; // 保存失敗時は中断
 
     document.getElementById('input-gross').value = '';
     document.getElementById('input-transport').value = '0';
 
     renderHistory();
     updateDashboard();
-    toast('登録しました！');
+    toast(existed ? `${parseInt(month.split('-')[1])}月の明細を更新しました` : '登録しました！');
   });
 
   // 設定フォーム
@@ -509,6 +503,31 @@ document.addEventListener('DOMContentLoaded', () => {
       location.reload();
     }
   });
+
+  // モーダル（免責事項・プライバシーポリシー）
+  document.querySelectorAll('.footer-link').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const modal = document.getElementById(btn.dataset.modal);
+      if (modal) { modal.hidden = false; document.body.style.overflow = 'hidden'; }
+    });
+  });
+  document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    const close = () => { overlay.hidden = true; document.body.style.overflow = ''; };
+    overlay.querySelector('.modal-close').addEventListener('click', close);
+    overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      document.querySelectorAll('.modal-overlay:not([hidden])').forEach(o => {
+        o.hidden = true; document.body.style.overflow = '';
+      });
+    }
+  });
+
+  // ストレージ利用不可の警告
+  if (!isStorageAvailable()) {
+    toast('プライベートモードではデータが保存できません');
+  }
 
   initSettingsForm();
   initOcr();

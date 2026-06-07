@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex">
+  <title>計算ロジック テスト — あと稼げるくん</title>
+  <style>
+    body { font-family: -apple-system, 'Hiragino Sans', sans-serif; max-width: 720px; margin: 0 auto; padding: 1.5rem; background: #f9fafb; color: #111827; }
+    h1 { font-size: 1.25rem; }
+    #summary { padding: .75rem 1rem; border-radius: 8px; font-weight: 700; margin: 1rem 0; }
+    #summary.pass { background: #dcfce7; color: #166534; }
+    #summary.fail { background: #fee2e2; color: #991b1b; }
+    .case { padding: .5rem .75rem; border-radius: 6px; margin-bottom: .35rem; font-size: .85rem; display: flex; gap: .5rem; }
+    .case.pass { background: #f0fdf4; }
+    .case.fail { background: #fef2f2; }
+    .mark { font-weight: 700; }
+    .pass .mark { color: #16a34a; }
+    .fail .mark { color: #dc2626; }
+    .detail { color: #6b7280; font-size: .75rem; margin-left: auto; }
+    .group { font-weight: 700; margin: 1.25rem 0 .5rem; font-size: .95rem; }
+  </style>
+</head>
+<body>
+  <h1>🧪 計算ロジック自動テスト</h1>
+  <p style="font-size:.85rem;color:#6b7280">calc.js の税計算・データ検証ロジックを検証します。デプロイ前にこのページで全テストが通ることを確認してください。</p>
+  <div id="summary">実行中...</div>
+  <div id="results"></div>
+
+  <script src="calc.js"></script>
+  <script>
+    'use strict';
+    const results = document.getElementById('results');
+    let pass = 0, fail = 0;
+
+    function group(name) {
+      const el = document.createElement('div');
+      el.className = 'group';
+      el.textContent = name;
+      results.appendChild(el);
+    }
+    function assert(name, actual, expected) {
+      const ok = JSON.stringify(actual) === JSON.stringify(expected);
+      ok ? pass++ : fail++;
+      const el = document.createElement('div');
+      el.className = 'case ' + (ok ? 'pass' : 'fail');
+      el.innerHTML = `<span class="mark">${ok ? '✓' : '✗'}</span>
+        <span>${name}</span>
+        <span class="detail">${ok ? '' : `期待:${JSON.stringify(expected)} / 実際:${JSON.stringify(actual)}`}</span>`;
+      results.appendChild(el);
+    }
+
+    // ── 定数 ──
+    group('2026年税制定数');
+    assert('給与所得控除 = 65万', KYUYO_KOJO, 650000);
+    assert('住民税基礎控除 = 53万', KISO_JUMINZEI, 530000);
+    assert('住民税発生ライン = 118万', JUMINZEI_LINE, 1180000);
+    assert('扶養の壁 = 123万', SHOTOKUZEI_LINE, 1230000);
+
+    // ── 住民税計算 ──
+    group('住民税計算 calcJuminzei()');
+    assert('118万以下は非課税（0円）', calcJuminzei(1180000), 0);
+    assert('118万ちょうども0円', calcJuminzei(1180000, '東京都'), 0);
+    // 119万: 課税所得 1190000-650000-530000=10000 → 所得割1000 + 均等割6000 = 7000
+    assert('119万で住民税7000円', calcJuminzei(1190000, '東京都'), 7000);
+    assert('150万・東京（均等割6000）', calcJuminzei(1500000, '東京都'), 32000 + 6000);
+    assert('150万・高知（均等割6500）', calcJuminzei(1500000, '高知県'), 32000 + 6500);
+    assert('地域差は均等割の差500円', calcJuminzei(1500000, '高知県') - calcJuminzei(1500000, '東京都'), 500);
+    assert('都道府県未指定は標準6000', calcJuminzei(1500000), 32000 + 6000);
+    assert('不明な都道府県も標準6000', calcJuminzei(1500000, '海外'), 32000 + 6000);
+
+    // ── 均等割テーブル ──
+    group('均等割 getKintouWari()');
+    assert('東京都 = 6000', getKintouWari('東京都'), 6000);
+    assert('岩手県 = 6500', getKintouWari('岩手県'), 6500);
+    assert('長野県 = 6300', getKintouWari('長野県'), 6300);
+    assert('null → 6000', getKintouWari(null), 6000);
+
+    // ── 金額サニタイズ ──
+    group('金額サニタイズ sanitizeAmount()');
+    assert('通常値はそのまま', sanitizeAmount(85000), 85000);
+    assert('負数 → 0', sanitizeAmount(-5000), 0);
+    assert('NaN → 0', sanitizeAmount('abc'), 0);
+    assert('空文字 → 0', sanitizeAmount(''), 0);
+    assert('Infinity → 0', sanitizeAmount(Infinity), 0);
+    assert('小数は切り捨て', sanitizeAmount(1234.99), 1234);
+    assert('上限超は1億にcap', sanitizeAmount(1e15), 100000000);
+    assert('文字列数値は変換', sanitizeAmount('50000'), 50000);
+
+    // ── データ全体サニタイズ ──
+    group('データ検証 sanitizeData()');
+    assert('null入力 → 空データ', sanitizeData(null), { records: [], settings: {} });
+    assert('文字列入力 → 空データ', sanitizeData('hack'), { records: [], settings: {} });
+    assert('不正な月を除外',
+      sanitizeData({ records: [{ month: '2026-13', gross: 100 }, { month: 'xxx', gross: 200 }] }).records.length, 0);
+    assert('重複月を1件に',
+      sanitizeData({ records: [{ month: '2026-05', gross: 100 }, { month: '2026-05', gross: 200 }] }).records.length, 1);
+    assert('負数grossを0に',
+      sanitizeData({ records: [{ month: '2026-03', gross: -999 }] }).records[0].gross, 0);
+    assert('不正な都道府県を空に',
+      sanitizeData({ settings: { prefecture: '<script>' } }).settings.prefecture, '');
+    assert('正しい都道府県は保持',
+      sanitizeData({ settings: { prefecture: '大阪府' } }).settings.prefecture, '大阪府');
+    assert('city長さを50文字に制限',
+      sanitizeData({ settings: { city: 'あ'.repeat(100) } }).settings.city.length, 50);
+    assert('limitTypeの型を固定',
+      sanitizeData({ settings: { limitType: 12345 } }).settings.limitType, '');
+
+    // ── サマリ ──
+    const summary = document.getElementById('summary');
+    summary.className = fail === 0 ? 'pass' : 'fail';
+    summary.textContent = fail === 0
+      ? `✅ 全 ${pass} 件のテストに合格しました`
+      : `❌ ${fail} 件失敗 / ${pass} 件合格`;
+  </script>
+</body>
+</html>

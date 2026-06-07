@@ -26,8 +26,8 @@
     "offers": { "@type": "Offer", "price": "0", "priceCurrency": "JPY" }
   }
   </script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js" integrity="sha384-Sse/HDqcypGpyTDpvZOJNnG0TT3feGQUkF9H+mnRvic+LjR+K1NhTt8f51KIQ3v3" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js" integrity="sha384-GJqSu7vueQ9qN0E9yLPb3Wtpd7OrgK8KmYzC8T1IysG1bcvxvIO4qtYR/D3A991F" crossorigin="anonymous"></script>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -201,7 +201,7 @@
       <ul>
         <li>給与所得 ＝ 総収入 − 給与所得控除（<strong>最低65万円</strong> ※旧55万）</li>
         <li>課税所得 ＝ 給与所得 − 基礎控除（住民税<strong>53万円</strong> ※旧43万）</li>
-        <li>住民税 ＝ 課税所得 × 10% ＋ 均等割（約5,000円）</li>
+        <li>住民税 ＝ 課税所得 × 10% ＋ 均等割（約6,000円・地域差あり）</li>
         <li>住民税 非課税ライン：給与収入 <strong>118万円以下</strong>（※旧98万）</li>
         <li>所得税・扶養の壁：給与収入 <strong>123万円以下</strong>（※旧103万）</li>
       </ul>
@@ -214,6 +214,65 @@
     </div>
   </section>
 
+  <!-- フッター -->
+  <footer class="site-footer">
+    <p class="footer-disclaimer">
+      ※ 本ツールの計算結果は概算であり、正確な税額・扶養判定を保証するものではありません。
+      実際の判断は勤務先・税務署・市区町村の窓口にご確認ください。
+    </p>
+    <nav class="footer-links">
+      <button type="button" class="footer-link" data-modal="modal-disclaimer">免責事項</button>
+      <span class="footer-sep">・</span>
+      <button type="button" class="footer-link" data-modal="modal-privacy">プライバシーポリシー</button>
+    </nav>
+    <p class="footer-copy">© 2026 あと稼げるくん</p>
+  </footer>
+
+  <!-- 免責事項モーダル -->
+  <div class="modal-overlay" id="modal-disclaimer" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="disclaimer-title">
+      <div class="modal-head">
+        <h2 id="disclaimer-title">免責事項</h2>
+        <button type="button" class="modal-close" aria-label="閉じる">✕</button>
+      </div>
+      <div class="modal-body">
+        <p>「あと稼げるくん」（以下、本ツール）は、アルバイト・パート等の年収管理を補助する目的で提供される無料の計算ツールです。</p>
+        <ul>
+          <li>本ツールの計算結果はあくまで<strong>概算</strong>であり、その正確性・完全性・最新性を保証するものではありません。</li>
+          <li>税制・社会保険制度は法改正等により変更される場合があります。最新の制度については国税庁・お住まいの市区町村にご確認ください。</li>
+          <li>本ツールでは「給与所得控除」「基礎控除」「均等割」等の標準的な値を用いて計算しており、個人の所得控除（生命保険料控除・勤労学生控除等）は反映されません。</li>
+          <li>本ツールの利用によって生じたいかなる損害についても、提供者は一切の責任を負いません。</li>
+          <li>実際の扶養判定・税額・社会保険の加入要否については、必ず勤務先・税務署・年金事務所等の公的機関にご確認ください。</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- プライバシーポリシーモーダル -->
+  <div class="modal-overlay" id="modal-privacy" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="privacy-title">
+      <div class="modal-head">
+        <h2 id="privacy-title">プライバシーポリシー</h2>
+        <button type="button" class="modal-close" aria-label="閉じる">✕</button>
+      </div>
+      <div class="modal-body">
+        <h3>1. データの保存場所</h3>
+        <p>本ツールに入力された給与明細・設定情報は、すべて<strong>お使いのブラウザ内（LocalStorage）にのみ保存</strong>されます。提供者のサーバーへ送信・収集されることは一切ありません。</p>
+        <h3>2. 給与明細画像（OCR）の扱い</h3>
+        <p>スクリーンショット読み取り機能（OCR）は、<strong>ブラウザ内で完結</strong>します。アップロードされた画像が外部サーバーへ送信されることはありません。</p>
+        <h3>3. データの削除</h3>
+        <p>「設定」→「全データをリセット」、またはブラウザのデータ削除でいつでも完全に消去できます。</p>
+        <h3>4. Cookie・広告について</h3>
+        <p>本サイトでは、将来的に第三者配信の広告サービス（Google AdSense 等）を利用する場合があります。これらの事業者は、ユーザーの興味に応じた広告を表示するために Cookie を使用することがあります。Cookie を無効にする設定はブラウザから行えます。</p>
+        <h3>5. アクセス解析</h3>
+        <p>本サイトはアクセス状況把握のため解析ツールを利用する場合があります。これらは統計的な情報であり、個人を特定するものではありません。</p>
+        <h3>6. お問い合わせ</h3>
+        <p>本ポリシーに関するお問い合わせは、GitHub リポジトリの Issue よりお願いいたします。</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="calc.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
