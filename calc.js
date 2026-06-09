@@ -54,15 +54,19 @@ const JUMINZEI_LINE = KYUYO_KOJO + KINTOU_HIKAZEI_GOUKEI; // = 1,100,000円
 const SHOTOKUWARI_LINE = KYUYO_KOJO + KISO_JUMINZEI;      // = 1,180,000円
 // 親の扶養控除の判定基準（合計所得58万 = 給与123万）
 const FUYO_LINE = 1230000;
-// 社会保険の扶養を外れるライン（手取りへの影響が最も大きい）
-const SHAHO_LINE = 1300000;
+// 社会保険の扶養を外れるライン（被扶養者認定の年収上限）
+//  ・19〜22歳（その年の12/31時点）: 150万円 ※2025年10月改正
+//  ・それ以外（18歳以下・23歳以上）: 130万円
+const SHAHO_LINE = 1300000;          // 18歳以下・23歳以上
+const SHAHO_LINE_19_22 = 1500000;    // 19〜22歳（2025年10月〜）
 // 親の特定扶養控除が満額維持／勤労学生控除の上限（合計所得85万）
 const TOKUTEI_FUYO_LINE = 1500000;
 // 本人に所得税がかかり始めるライン（給与所得控除65万＋基礎控除95万）
 const SHOTOKUZEI_LINE = 1600000;
 
-// 標準の上限（社会保険の壁＝学生バイトに最も影響が大きい）
-const DEFAULT_LIMIT = SHAHO_LINE;
+// 標準の上限：大学生（19〜22歳）を想定。150万に社会保険の扶養・親の控除満額・
+// 勤労学生控除の上限が重なるため、ここが最重要ライン。
+const DEFAULT_LIMIT = SHAHO_LINE_19_22;
 
 // 調整控除：所得税と住民税の人的控除の差による負担増を調整する税額控除。
 // 課税所得200万円以下は「人的控除差の合計 と 課税所得 の小さい方 × 5%」。
@@ -140,7 +144,7 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     PREFECTURES, PREF_KINTOU_WARI, getKintouWari, KINTOU_WARI_BASE,
     KYUYO_KOJO, KISO_JUMINZEI, KINTOU_HIKAZEI_GOUKEI, JINTEKI_KOJO_SA,
-    JUMINZEI_LINE, SHOTOKUWARI_LINE, FUYO_LINE, SHAHO_LINE,
+    JUMINZEI_LINE, SHOTOKUWARI_LINE, FUYO_LINE, SHAHO_LINE, SHAHO_LINE_19_22,
     TOKUTEI_FUYO_LINE, SHOTOKUZEI_LINE, DEFAULT_LIMIT,
     calcJuminzei, sanitizeAmount, sanitizeData,
     STORAGE_KEY, MAX_AMOUNT, EMPTY_DATA,

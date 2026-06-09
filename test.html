@@ -56,7 +56,9 @@
     assert('住民税基礎控除 = 53万', KISO_JUMINZEI, 530000);
     assert('住民税(均等割)発生ライン = 110万', JUMINZEI_LINE, 1100000);
     assert('住民税(所得割)発生ライン = 118万', SHOTOKUWARI_LINE, 1180000);
-    assert('社会保険の壁 = 130万', SHAHO_LINE, 1300000);
+    assert('社会保険の壁(18歳以下/23歳以上) = 130万', SHAHO_LINE, 1300000);
+    assert('社会保険の壁(19-22歳) = 150万', SHAHO_LINE_19_22, 1500000);
+    assert('デフォルト上限 = 150万（大学生）', DEFAULT_LIMIT, 1500000);
     assert('特定扶養/勤労学生の壁 = 150万', TOKUTEI_FUYO_LINE, 1500000);
     assert('本人所得税の壁 = 160万', SHOTOKUZEI_LINE, 1600000);
 
