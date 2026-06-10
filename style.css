@@ -384,6 +384,16 @@ small { font-size: .7rem; color: var(--gray-400); font-weight: 400; }
 }
 .aff-btn:hover { background: #15803d; }
 
+/* バナー広告（affiliate.js が全ページのフッター直前に挿入） */
+.aff-banner-section {
+  position: relative;
+  text-align: center;
+  padding: 1.25rem 1rem 1.5rem;
+  margin: 0;
+  border-top: 1px solid var(--gray-200);
+}
+.aff-banner-section img { max-width: 100%; height: auto; display: inline-block; }
+
 /* ===== Article pages ===== */
 body.article-page { max-width: 720px; background: #fff; }
 .article-nav {
